@@ -1,0 +1,24 @@
+version: "3.8"
+services:
+  media_container:
+    container_name: media_container
+    build: ./
+    # command: ./media_service "migrate"
+    volumes:
+      - ./uploads:/media/uploads # чтобы файлы сохранялись на компе
+    environment:
+      # - POSTGRES_HOST=go_shop_postgres
+      # - POSTGRES_USER=${POSTGRES_USER}
+      # - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      # - POSTGRES_DB=${POSTGRES_DB}
+      # - POSTGRES_PORT=5432
+      - KAFKA_BROKER=kafka:9092
+    networks:
+      - shopongo_default
+    ports:
+      - "8084:8084"
+
+
+networks:
+  shopongo_default:
+    external: true
