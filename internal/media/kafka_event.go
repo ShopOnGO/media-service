@@ -33,21 +33,25 @@ func (h *MediaHandler) HandleMediaEvent(ctx context.Context, msg []byte) error {
 func (h *MediaHandler) HandleCreateMediaEvent(ctx context.Context, mediaSvc *MediaService, event ProductCreatedEvent) error {
 	logger.Infof("Создание медиа для продукта %d", event.ProductID)
 	
-	var urls []string
-	for _, key := range event.MediaKeys {
-		url := mediaSvc.GenerateURL(key)
-		urls = append(urls, url)
-	}
+	var imageURLs, videoURLs []string
+    for _, key := range event.ImageKeys {
+        imageURLs = append(imageURLs, mediaSvc.GenerateURL(key))
+    }
+    for _, key := range event.VideoKeys {
+        videoURLs = append(videoURLs, mediaSvc.GenerateURL(key))
+    }
 
-	out := MediaStoredEvent{
-		ProductID: event.ProductID,
-		URLs:      urls,
-	}
+    out := MediaStoredEvent{
+		Action: 	"media-stored",
+        ProductID: 	event.ProductID,
+        ImageURLs: 	imageURLs,
+        VideoURLs: 	videoURLs,
+    }
 
-	payload, err := json.Marshal(out)
-	if err != nil {
-		return fmt.Errorf("ошибка сериализации события media-stored: %w", err)
-	}
+    payload, err := json.Marshal(out)
+    if err != nil {
+        return fmt.Errorf("ошибка сериализации события media-stored: %w", err)
+    }
 
-	return h.Kafka.Produce(ctx, []byte("media-stored"), payload)
+    return h.Kafka.Produce(ctx, []byte("media-stored"), payload)
 }

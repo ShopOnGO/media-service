@@ -23,7 +23,7 @@ func (s *MediaService) UploadFile(file *multipart.FileHeader) (string, error) {
     if err != nil {
         return "", err
     }
-    return s.storage.GenerateURL(key), nil
+    return key, nil
 }
 
 func (s *MediaService) GenerateURL(key string) string {
