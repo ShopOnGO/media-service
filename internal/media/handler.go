@@ -29,7 +29,17 @@ func NewMediaHandler(router *gin.Engine, deps MediaHandlerDeps) *MediaHandler {
     return handler
 }
 
-// HandleUploadHTTP обрабатывает multipart/form-data
+// HandleUploadHTTP загружает файл и возвращает URL.
+// @Summary      Загрузка медиафайла
+// @Description  Принимает multipart/form-data с одним полем "file", сохраняет файл через сервис MediaService и возвращает URL загруженного ресурса.
+// @Tags         media
+// @Accept       multipart/form-data
+// @Produce      json
+// @Param        file  formData  file  true  "Файл для загрузки"
+// @Success      200   {object}  map[string]string  "url: ссылка на загруженный файл"
+// @Failure      400   {object}  map[string]string  "error: no file"
+// @Failure      500   {object}  map[string]string  "error: описание ошибки"
+// @Router       /media/uploads [post]
 func (h *MediaHandler) HandleUploadHTTP(c *gin.Context) {
     file, err := c.FormFile("file")
     if err != nil {
