@@ -1,0 +1,40 @@
+info:
+  contact: {}
+paths:
+  /media/uploads:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Принимает multipart/form-data с одним полем "file", сохраняет файл
+        через сервис MediaService и возвращает URL загруженного ресурса.
+      parameters:
+      - description: Файл для загрузки
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'url: ссылка на загруженный файл'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: 'error: no file'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 'error: описание ошибки'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Загрузка медиафайла
+      tags:
+      - media
+swagger: "2.0"
