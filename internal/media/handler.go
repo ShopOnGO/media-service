@@ -21,7 +21,7 @@ func NewMediaHandler(router *gin.Engine, deps MediaHandlerDeps) *MediaHandler {
         Mediasvc:   deps.Mediasvc,
         Kafka:      deps.Kafka,
     }
-	mediaGroup := router.Group("/media")
+	mediaGroup := router.Group("/media-service")
 	{
 		mediaGroup.POST("/uploads", handler.HandleUploadHTTP)
 	}
