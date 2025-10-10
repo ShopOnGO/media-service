@@ -24,7 +24,7 @@ FROM alpine:latest
 
 WORKDIR /media
 
-COPY .env /media/.env
+# COPY .env /media/.env
 
 # Копируем бинарный файл из предыдущего этапа
 COPY --from=builder /media/media_service /media/media_service
