@@ -13,6 +13,8 @@ services:
       # - POSTGRES_DB=${POSTGRES_DB}
       # - POSTGRES_PORT=5432
       - KAFKA_BROKER=kafka:9092
+      - MEDIA_SERVICE_LOG_LEVEL=${MEDIA_SERVICE_LOG_LEVEL}
+      - MEDIA_SERVICE_FILE_LOG_LEVEL=${MEDIA_SERVICE_FILE_LOG_LEVEL}
     env_file:
       - .env
     networks:

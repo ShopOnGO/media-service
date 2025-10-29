@@ -4,6 +4,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/ShopOnGO/ShopOnGO/configs"
 	"github.com/ShopOnGO/ShopOnGO/pkg/logger"
 	"github.com/joho/godotenv"
 )
@@ -13,6 +14,8 @@ type Config struct {
 	// Db DbConfig
 	KafkaConsumer KafkaConsumerConfig
 	KafkaProducer KafkaProducerConfig
+	LogLevel      logger.LogLevel
+	FileLogLevel  logger.LogLevel
 }
 
 // type DbConfig struct {
@@ -20,10 +23,10 @@ type Config struct {
 // }
 
 type MediaConfig struct {
-	Port         string
-	StorageType  string // "local" or "s3"
-	LocalPath    string // path where to store locally
-	BaseURL      string // public URL prefix for local media
+	Port        string
+	StorageType string // "local" or "s3"
+	LocalPath   string // path where to store locally
+	BaseURL     string // public URL prefix for local media
 	S3Bucket    string
 	S3Region    string
 	S3Endpoint  string
@@ -32,9 +35,9 @@ type MediaConfig struct {
 }
 
 type KafkaConsumerConfig struct {
-	Brokers []string
-	Topic   string
-	GroupID string
+	Brokers  []string
+	Topic    string
+	GroupID  string
 	ClientID string
 }
 
@@ -52,6 +55,18 @@ func LoadConfig() *Config {
 	brokersRaw := os.Getenv("KAFKA_BROKERS")
 	brokers := strings.Split(brokersRaw, ",")
 
+	// logger
+	logLevelStr := os.Getenv("MEDIA_SERVICE_LOG_LEVEL")
+	if logLevelStr == "" {
+		logLevelStr = "INFO"
+	}
+	LogLevel := configs.ParseLogLevel(logLevelStr)
+	fileLogLevelStr := os.Getenv("MEDIA_SERVICE_FILE_LOG_LEVEL")
+	if fileLogLevelStr == "" {
+		fileLogLevelStr = "INFO"
+	}
+	FileLogLevel := configs.ParseLogLevel(fileLogLevelStr)
+
 	return &Config{
 		Media: MediaConfig{
 			Port:        getEnv("MEDIA_PORT", "8080"),
@@ -68,21 +83,23 @@ func LoadConfig() *Config {
 		// 	Dsn: os.Getenv("DSN"),
 		// },
 		KafkaConsumer: KafkaConsumerConfig{
-			Brokers: brokers,
-			Topic:   os.Getenv("KAFKA_CONSUMER_TOPIC"),
-			GroupID: os.Getenv("KAFKA_CONSUMER_GROUP_ID"),
+			Brokers:  brokers,
+			Topic:    os.Getenv("KAFKA_CONSUMER_TOPIC"),
+			GroupID:  os.Getenv("KAFKA_CONSUMER_GROUP_ID"),
 			ClientID: os.Getenv("KAFKA_CONSUMER_CLIENT_ID"),
 		},
 		KafkaProducer: KafkaProducerConfig{
 			Brokers: brokers,
 			Topic:   parseKafkaTopics(os.Getenv("KAFKA_PRODUCER_TOPIC")),
 		},
+		LogLevel:     LogLevel,
+		FileLogLevel: FileLogLevel,
 	}
 }
 
 func getEnv(key, def string) string {
 	if v := os.Getenv(key); v != "" {
-	  return v
+		return v
 	}
 	return def
 }
