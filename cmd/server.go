@@ -19,11 +19,6 @@ func main() {
 	// migrations.CheckForMigrations()
 	conf := configs.LoadConfig()
 
-	consoleLvl := conf.LogLevel
-	fileLvl := conf.FileLogLevel
-	logger.InitLogger(consoleLvl, fileLvl)
-	logger.EnableFileLogging("TailorNado_media-service")
-
 	kafkaProducers := kafkaService.InitKafkaProducers(
 		conf.KafkaProducer.Brokers,
 		conf.KafkaProducer.Topic,
@@ -31,11 +26,28 @@ func main() {
 
 	// репозиторий для хранения (local/S3) через единый интерфейс
 	var store media.Storage
+	var err error // Объявляем переменную ошибки
+
 	switch conf.Media.StorageType {
 	case "s3":
-		store, _ = media.NewS3Storage(conf.Media.S3Bucket, conf.Media.S3Region)
+		// ВАЖНО: Обрабатываем ошибку err, а не игнорируем её через "_"
+		store, err = media.NewS3Storage(
+			conf.Media.S3Bucket,
+			conf.Media.S3Region,
+			conf.Media.S3Endpoint,
+			conf.Media.S3AccessKey,
+			conf.Media.S3SecretKey,
+		)
+		if err != nil {
+			// Если не удалось подключиться к S3, программа должна упасть и сказать почему
+			logger.Error("CRITICAL: Failed to initialize S3 storage", err.Error())
+			os.Exit(1) 
+		}
+		logger.Info("✅ S3 Storage initialized successfully")
+
 	default:
 		store = media.NewLocalStorage(conf.Media.LocalPath, conf.Media.BaseURL)
+		logger.Info("✅ Local Storage initialized")
 	}
 
 	// service
@@ -43,6 +55,7 @@ func main() {
 
 	// handler
 	router := gin.Default()
+
 	router.Static("/media", "./uploads")
 
 	mediaHandler := media.NewMediaHandler(router, media.MediaHandlerDeps{
