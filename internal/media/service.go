@@ -1,29 +1,32 @@
 package media
 
 import (
-    "mime/multipart"
+	"mime/multipart"
 )
 
 type MediaService struct {
-    storage Storage
+	storage Storage
 }
 
 func NewMediaService(s Storage) *MediaService {
-    return &MediaService{storage: s}
+	return &MediaService{storage: s}
 }
 
 func (s *MediaService) UploadFile(file *multipart.FileHeader) (string, error) {
-    f, err := file.Open()
-    if err != nil {
-        return "", err
-    }
-    defer f.Close()
+	f, err := file.Open()
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
 
-    key, err := s.storage.Save(file)
-    if err != nil {
-        return "", err
-    }
-    return key, nil
+	key, err := s.storage.Save(file)
+	if err != nil {
+		return "", err
+	}
+
+	fullURL := s.storage.GenerateURL(key)
+
+	return fullURL, nil
 }
 
 func (s *MediaService) GenerateURL(key string) string {
