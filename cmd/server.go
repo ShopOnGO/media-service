@@ -11,6 +11,7 @@ import (
 	"github.com/ShopOnGO/ShopOnGO/pkg/logger"
 	"github.com/ShopOnGO/media-service/configs"
 	"github.com/ShopOnGO/media-service/internal/media"
+	"github.com/ShopOnGO/media-service/internal/redisdb"
 	"github.com/gin-gonic/gin"
 	"github.com/segmentio/kafka-go"
 )
@@ -24,13 +25,15 @@ func main() {
 		conf.KafkaProducer.Topic,
 	)
 
+	redisClient := redisdb.NewRedisDB(conf)
+	logger.Info("✅ Redis connected")
+
 	// репозиторий для хранения (local/S3) через единый интерфейс
 	var store media.Storage
-	var err error // Объявляем переменную ошибки
+	var err error
 
 	switch conf.Media.StorageType {
 	case "s3":
-		// ВАЖНО: Обрабатываем ошибку err, а не игнорируем её через "_"
 		store, err = media.NewS3Storage(
 			conf.Media.S3Bucket,
 			conf.Media.S3Region,
@@ -39,9 +42,8 @@ func main() {
 			conf.Media.S3SecretKey,
 		)
 		if err != nil {
-			// Если не удалось подключиться к S3, программа должна упасть и сказать почему
 			logger.Error("CRITICAL: Failed to initialize S3 storage", err.Error())
-			os.Exit(1) 
+			os.Exit(1)
 		}
 		logger.Info("✅ S3 Storage initialized successfully")
 
@@ -51,7 +53,7 @@ func main() {
 	}
 
 	// service
-	mediaSvc := media.NewMediaService(store)
+	mediaSvc := media.NewMediaService(store, redisClient)
 
 	// handler
 	router := gin.Default()

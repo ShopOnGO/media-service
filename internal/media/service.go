@@ -1,18 +1,29 @@
 package media
 
 import (
+	"context"
 	"mime/multipart"
+	"time"
+
+	"github.com/ShopOnGO/ShopOnGO/pkg/logger"
+	"github.com/ShopOnGO/media-service/internal/redisdb"
 )
+
+const mediaCacheTTL = 24 * time.Hour
 
 type MediaService struct {
 	storage Storage
+	redis   *redisdb.RedisDB
 }
 
-func NewMediaService(s Storage) *MediaService {
-	return &MediaService{storage: s}
+func NewMediaService(s Storage, r *redisdb.RedisDB) *MediaService {
+	return &MediaService{
+		storage: s,
+		redis:   r,
+	}
 }
 
-func (s *MediaService) UploadFile(file *multipart.FileHeader) (string, error) {
+func (s *MediaService) UploadFile(ctx context.Context, file *multipart.FileHeader) (string, error) {
 	f, err := file.Open()
 	if err != nil {
 		return "", err
@@ -26,9 +37,23 @@ func (s *MediaService) UploadFile(file *multipart.FileHeader) (string, error) {
 
 	fullURL := s.storage.GenerateURL(key)
 
+	err = s.redis.Client.Set(ctx, "media:"+key, fullURL, mediaCacheTTL).Err()
+	if err != nil {
+		logger.Error("Failed to cache in Redis", err)
+	}
+
 	return fullURL, nil
 }
 
-func (s *MediaService) GenerateURL(key string) string {
-	return s.storage.GenerateURL(key)
+func (s *MediaService) GenerateURL(ctx context.Context, key string) string {
+	val, err := s.redis.Client.Get(ctx, "media:" + key).Result()
+	if err == nil {
+		return val
+	}
+
+	url := s.storage.GenerateURL(key)
+
+	_ = s.redis.Client.Set(ctx, "media:"+key, url, mediaCacheTTL).Err()
+
+	return url
 }

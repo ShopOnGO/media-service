@@ -2,6 +2,7 @@ package configs
 
 import (
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/ShopOnGO/ShopOnGO/configs"
@@ -12,10 +13,17 @@ import (
 type Config struct {
 	Media MediaConfig
 	// Db DbConfig
+	Redis         RedisConfig
 	KafkaConsumer KafkaConsumerConfig
 	KafkaProducer KafkaProducerConfig
 	LogLevel      logger.LogLevel
 	FileLogLevel  logger.LogLevel
+}
+
+type RedisConfig struct {
+	Addr     string
+	Password string
+	DB       int
 }
 
 // type DbConfig struct {
@@ -82,6 +90,11 @@ func LoadConfig() *Config {
 		// Db: DbConfig{
 		// 	Dsn: os.Getenv("DSN"),
 		// },
+		Redis: RedisConfig{
+			Addr:     getEnv("REDIS_ADDRESS", "redis:6379"), // Дефолтное значение
+			Password: os.Getenv("REDIS_PASSWORD"),
+			DB:       getEnvInt("REDIS_DB", 0), // Читаем как int, по умолчанию 0
+		},
 		KafkaConsumer: KafkaConsumerConfig{
 			Brokers:  brokers,
 			Topic:    os.Getenv("KAFKA_CONSUMER_TOPIC"),
@@ -102,6 +115,19 @@ func getEnv(key, def string) string {
 		return v
 	}
 	return def
+}
+
+func getEnvInt(key string, def int) int {
+	v := os.Getenv(key)
+	if v == "" {
+		return def
+	}
+	i, err := strconv.Atoi(v)
+	if err != nil {
+		logger.Error("Invalid integer environment variable", key)
+		return def
+	}
+	return i
 }
 
 func parseKafkaTopics(s string) map[string]string {

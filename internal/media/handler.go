@@ -46,7 +46,7 @@ func (h *MediaHandler) HandleUploadHTTP(c *gin.Context) {
         c.JSON(400, gin.H{"error": "no file"})
         return
     }
-    url, err := h.Mediasvc.UploadFile(file)
+    url, err := h.Mediasvc.UploadFile(c.Request.Context(), file)
     if err != nil {
         c.JSON(500, gin.H{"error": err.Error()})
         return
