@@ -35,10 +35,10 @@ func (h *MediaHandler) HandleCreateMediaEvent(ctx context.Context, mediaSvc *Med
 	
 	var imageURLs, videoURLs []string
     for _, key := range event.ImageKeys {
-        imageURLs = append(imageURLs, mediaSvc.GenerateURL(ctx, key))
+        imageURLs = append(imageURLs, key)
     }
     for _, key := range event.VideoKeys {
-        videoURLs = append(videoURLs, mediaSvc.GenerateURL(ctx, key))
+        videoURLs = append(videoURLs, key)
     }
 
     out := MediaStoredEvent{
