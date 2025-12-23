@@ -12,6 +12,7 @@ import (
 	"github.com/ShopOnGO/media-service/configs"
 	"github.com/ShopOnGO/media-service/internal/media"
 	"github.com/ShopOnGO/media-service/internal/redisdb"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/segmentio/kafka-go"
 )
@@ -57,6 +58,15 @@ func main() {
 
 	// handler
 	router := gin.Default()
+
+	router.Use(cors.New(cors.Config{
+		// Разрешаем запросы с фронтенда
+		AllowOrigins:     []string{"http://localhost:3000", "http://127.0.0.1:3000"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Accept"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+	}))
 
 	router.Static("/media", "./uploads")
 
